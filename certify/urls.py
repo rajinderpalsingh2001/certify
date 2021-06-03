@@ -18,6 +18,6 @@ from django.urls import path
 from main import *
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path(r'^$',index),
+    path('index',index),
     path('sendemail',sendemail)
 ]
