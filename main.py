@@ -1,20 +1,16 @@
 from django.http import *
 from django.shortcuts import *
-import sqlite3
 from django.views.decorators.csrf import *
 import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
 
 
 def index(request):
     return render(request, 'index.html')
 
 def mail(name,certificatedata,filename,email_send,email_user,email_password):
-    import smtplib
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.base import MIMEBase
-    from email import encoders
-
     msg = MIMEMultipart()
     msg['From'] = email_user
     msg['To'] = email_send
