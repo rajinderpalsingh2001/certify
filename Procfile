@@ -1,0 +1,1 @@
+web: gunicorn certify.wsgi --log-file -

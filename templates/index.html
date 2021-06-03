@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Generator</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="{% static 'js/fabric.min.js' %}"></script>
+    <script src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+    <script src="{% static 'js/popper.min.js' %}"></script>
+    <script src="{% static 'js/jszip.min.js' %}"></script>
+    <script src="{% static 'js/FileSaver.js' %}"></script>
+    <script src="{% static 'js/jquery.csv.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/jquery.qrcode.min.js' %}"></script>
+    <style>
+        /* ------ scroll bar ------ */
+
+        /* width */
+
+        ::-webkit-scrollbar {
+            width: 13px;
+        }
+
+        /* Track */
+
+        ::-webkit-scrollbar-track {
+            box-shadow: inset 0 0 5px grey;
+            border-radius: 10px;
+        }
+
+        /* Handle */
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--apppink);
+            border-radius: 10px;
+        }
+
+        /* Handle on hover */
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--apppink);
+        }
+
+        .hidescroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hidescroll {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"
+          integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+</head>
+
+<body onload="fonts();">
+<div class="row">
+    <div class="col-4">
+        <div class="text-center" onclick="document.getElementById('csvfile').click();" id="csvdiv">
+            <i class="fas fa-file-csv"></i>
+            <p id="csvfilename"></p>
+            <input type="file" id='csvfile' style="display: none;" oninput="readcsv(this);" accept=".csv">
+        </div>
+    </div>
+
+    <div class="col-4">
+        <div class="text-center" id="generatecertificatebtn" disabled onclick="generateCertificates();">
+            <i class="fa fa-download"></i>
+        </div>
+
+    </div>
+    <div class="col-4">
+        <div class="text-center" onclick="document.getElementById('certificate').click();" id="cerdiv">
+            <i class="fa fa-image"></i>
+            <input type="file" id='certificate' style="display: none;" oninput="addcertificate();" accept="image/*">
+        </div>
+
+    </div>
+
+</div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-5">
+            <div class="editoroptions">
+                <div class="form-group" id="fields">
+
+                </div>
+
+                <div class="form-group collapse" id="editfield">
+                    <input type="color" oninput="changeFontColor (this.value);">
+
+                    <input type="text" list="fonts" class="btn btn-primary" oninput="changeFontStyle (this.value);">
+                    <datalist id="fonts">
+
+                    </datalist>
+                </div>
+
+                <div class="collapse" id="customformat">
+                    <input type="text" id="text">
+                </div>
+                <div>
+                    <button type="button" onclick="viewcsvdata();" class="btn btn-light"><img style="height:1.5rem;"
+                                                                                              src="static/icons/file.png"
+                                                                                              alt=""></button>
+                </div>
+
+                <div>
+                    <label for="setpositions">Center the Text</label>
+                    <input type="checkbox" id="setpositions" oninput="setpositions(this.value);">
+                </div>
+                <button id="settingsbtn" type="button" class="btn btn-light" data-toggle="modal"
+                        data-target="#settings">
+                    <img style="height:1.5rem;" src="static/icons/settings.png" alt="Settings"></button>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="editor">
+                <div style="width: 100%;text-align:center !important;">
+                    <canvas id="canvas"></canvas>
+                </div>
+            </div>
+
+
+            <div style="text-align: center;">
+                <div id="qrcode" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="data" style="display: none;">
+        <span
+                onclick="$('#data').removeClass('databackground');document.getElementById('data').style.display='none'">×</span>
+
+    <div class="csvdata">
+
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal fade" id="settings" tabindex="-1" role="dialog" aria-labelledby="settingsTitle" aria-hidden="true"
+     data-keyboard="false"
+     data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="settingsTitle">Settings</h5>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <label for="emailquestion">Send Emails after Generating Certificates</label>
+                    <input type="checkbox" id="emailquestion" oninput="emailsendcheck(this.value);">
+                </div>
+                <div id="settingsbody">
+
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-primary" type="button" onclick="$('#login').modal('show')">Change Login Credentials</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="savesettings();">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Download Modal -->
+<div class="modal fade" id="downloadmodal" tabindex="-1" role="dialog" aria-labelledby="settingsTitle"
+     aria-hidden="true" data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="DownloadmodalTitle"></h5>
+            </div>
+            <div id="downloadmodalbody" class="modal-body">
+                <button type="button" class="btn btn-success" onclick="downloadzip();">Download Certificates in Zip
+                </button>
+                <div id="emailsendshow">
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="window.location.reload();">Discard</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Login Modal -->
+<div class="modal fade" id="login" tabindex="-1" role="dialog" aria-labelledby="loginTitle" aria-hidden="true"
+     data-keyboard="false"
+     data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="loginTitle">Gmail Login</h5>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <input type="email" id="email" class="form-control" placeholder="Email">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="password" class="form-control" placeholder="Password">
+                    <button type="button" class="btn btn-primary" onclick="showhidepassword();">Show/Hide</button>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-success" onclick="login();">Login</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="$('#login').modal('hide');">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--  -->
+<script src="{% static 'js/main.js' %}"></script>
+</body>
+
+</html>
